@@ -1,4 +1,5 @@
-import { pgTable, serial, text, varchar, timestamp, boolean } from "drizzle-orm/pg-core"
+import type { InferSelectModel } from 'drizzle-orm';
+import { pgTable, serial, text, varchar, timestamp, boolean, uuid } from "drizzle-orm/pg-core"
 
 export const attendees = pgTable("attendees", {
   id: serial("id").primaryKey(),
@@ -16,3 +17,11 @@ export const attendees = pgTable("attendees", {
   checkedInAt: timestamp("checked_in_at"),
 })
 
+
+export const user = pgTable('User', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  email: varchar('email', { length: 64 }).notNull(),
+  password: varchar('password', { length: 64 }),
+});
+
+export type User = InferSelectModel<typeof user>;
