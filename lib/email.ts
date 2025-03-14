@@ -6,19 +6,40 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 // Event details
 const EVENT_NAME = "Tech Innovation Summit 2025"
 const EVENT_DATE = "April 15, 2025"
-const EVENT_LOCATION = "Tech Conference Center, 123 Innovation Blvd, San Francisco, CA"
+const EVENT_LOCATION = "Tech Conference Center, 123 Isaac John Street, Ikeja, Lagos State"
 const EVENT_TIME = "10:00 AM - 5:00 PM"
 
 interface ConfirmationEmailProps {
   to: string
   firstName: string
   lastName: string
+  publicId: string
 }
 
-export async function sendConfirmationEmail({ to, firstName, lastName }: ConfirmationEmailProps) {
+/**
+ * Generates a URL to a QR code image using a third-party service
+ * @param publicId The unique identifier to encode in the QR code
+ * @returns A URL string to the QR code image
+ */
+function getQRCodeServiceURL(publicId: string): string {
+  // Using a service like QR Server API
+  // const qrCodeValue = encodeURIComponent(`https://hook.fmac.ng/qr/${publicId}`);
+  const qrCodeValue = encodeURIComponent(`https://hook.fmac.ng`);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrCodeValue}`;
+
+
+  //will use below
+  // // const qrCodeValue = encodeURIComponent(`https://hook.fmac.ng/qr/${publicId}`);
+  // return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${publicId}`;
+}
+
+export async function sendConfirmationEmail({ to, firstName, lastName, publicId }: ConfirmationEmailProps) {
   try {
+    // Generate QR code as PNG data URL
+    const qrCodeDataURL = await getQRCodeServiceURL(publicId);
+    
     const { data, error } = await resend.emails.send({
-      from: "Tech Innovation Summit <events@yourdomain.com>",
+      from: "Tech Innovation Summit <events@hook.thth.ng>",
       to: [to],
       subject: `Registration Confirmed: ${EVENT_NAME}`,
       html: `
@@ -38,6 +59,15 @@ export async function sendConfirmationEmail({ to, firstName, lastName }: Confirm
             <p style="font-size: 16px; line-height: 1.5; color: #555;"><strong>Date:</strong> ${EVENT_DATE}</p>
             <p style="font-size: 16px; line-height: 1.5; color: #555;"><strong>Time:</strong> ${EVENT_TIME}</p>
             <p style="font-size: 16px; line-height: 1.5; color: #555;"><strong>Location:</strong> ${EVENT_LOCATION}</p>
+          </div>
+          
+          <div style="margin-bottom: 30px; text-align: center;">
+            <h2 style="color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Your Entry Pass</h2>
+            <p style="font-size: 16px; line-height: 1.5; color: #555;">Please present this QR code at the registration desk:</p>
+            <div style="max-width: 200px; margin: 15px auto; display: block;">
+              <img src="${qrCodeDataURL}" alt="QR Code" style="width: 100%; max-width: 200px;">
+            </div>
+            <p style="font-size: 14px; color: #777;">Registration ID: ${publicId}</p>
           </div>
           
           <div style="margin-bottom: 30px;">
@@ -74,6 +104,7 @@ export async function sendConfirmationEmail({ to, firstName, lastName }: Confirm
       console.error("Error sending email:", error)
       throw new Error(`Failed to send email: ${error.message}`)
     }
+    console.log("Email sent successfully:", data)
 
     return { success: true, data }
   } catch (error) {

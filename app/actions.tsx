@@ -6,15 +6,22 @@ import { attendees } from "../lib/db/schema"
 import { sendConfirmationEmail } from "../lib/email"
 import { revalidatePath } from "next/cache"
 
+// Function to generate an 8-character alphanumeric public ID
+function generatePublicId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 const attendeeSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   email: z.string().email(),
   company: z.string().optional(),
   jobTitle: z.string().optional(),
-  dietaryRestrictions: z.string().optional(),
-  tShirtSize: z.enum(["S", "M", "L", "XL", "XXL"]).optional(),
-  specialRequirements: z.string().optional(),
   marketingConsent: z.boolean().default(false),
 })
 
@@ -34,17 +41,16 @@ export async function registerAttendee(formData: unknown) {
         error: "This email is already registered for the event.",
       }
     }
+    const publicId = generatePublicId()
 
     // Insert into database
     const result = await db.insert(attendees).values({
+      publicId: publicId,
       firstName: validatedData.firstName,
       lastName: validatedData.lastName,
       email: validatedData.email,
       company: validatedData.company || null,
       jobTitle: validatedData.jobTitle || null,
-      dietaryRestrictions: validatedData.dietaryRestrictions || null,
-      tShirtSize: validatedData.tShirtSize || null,
-      specialRequirements: validatedData.specialRequirements || null,
       marketingConsent: validatedData.marketingConsent,
       registeredAt: new Date(),
     })
@@ -54,6 +60,7 @@ export async function registerAttendee(formData: unknown) {
       to: validatedData.email,
       firstName: validatedData.firstName,
       lastName: validatedData.lastName,
+      publicId: publicId,
     })
 
     revalidatePath("/")
