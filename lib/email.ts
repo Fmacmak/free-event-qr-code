@@ -25,7 +25,7 @@ function getQRCodeServiceURL(publicId: string): string {
   // Using a service like QR Server API
   // const qrCodeValue = encodeURIComponent(`https://hook.fmac.ng/qr/${publicId}`);
   const qrCodeValue = encodeURIComponent(`https://hook.fmac.ng`);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrCodeValue}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${publicId}`;
 
 
   //will use below
